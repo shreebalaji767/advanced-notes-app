@@ -113,3 +113,38 @@ test('deployed root favicon.ico is served successfully', async ({ page }) => {
   const bytes = await response.body();
   expect(bytes.subarray(0, 4)).toEqual(Buffer.from([0, 0, 1, 0]));
 });
+
+
+test('note templates create a structured meeting note', async ({ page }) => {
+  await page.locator('#templatesBtn').click();
+  await page.locator('[data-template="meeting"]').click();
+  await expect(page.locator('#title')).toHaveValue(/Meeting notes/);
+  await expect(page.locator('#rich')).toContainText('Action items');
+  await expect(page.locator('.note').first()).toContainText('Meeting notes');
+});
+
+test('related notes can be linked and opened from backlinks', async ({ page }) => {
+  await page.locator('#new').click();
+  await page.locator('#title').fill('First note');
+  await page.locator('#rich').fill('First note body');
+  await page.waitForTimeout(700);
+  await page.locator('#new').click();
+  await page.locator('#title').fill('Second note');
+  await page.waitForTimeout(700);
+  await page.locator('#linkNoteBtn').click();
+  await page.locator('[data-link-choice]').check();
+  await page.locator('#relatedClose').click();
+  await expect(page.locator('#relatedNotes')).toContainText('First note');
+  await page.locator('[data-open-related]').click();
+  await expect(page.locator('#title')).toHaveValue('First note');
+  await expect(page.locator('#relatedNotes')).toContainText('Second note');
+});
+
+test('focus mode hides navigation panes and can be exited', async ({ page }) => {
+  await page.locator('#focusBtn').click();
+  await expect(page.locator('body')).toHaveClass(/focus-mode/);
+  await expect(page.locator('.nav')).toBeHidden();
+  await page.locator('#focusBtn').click();
+  await expect(page.locator('body')).not.toHaveClass(/focus-mode/);
+  await expect(page.locator('.nav')).toBeVisible();
+});
