@@ -1,0 +1,11 @@
+{
+  "name": "Advanced Notes",
+  "short_name": "Notes",
+  "description": "Private offline-first notes workspace",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#dce3eb",
+  "theme_color": "#dce3eb",
+  "icons": []
+}
