@@ -209,6 +209,24 @@ test('documents and arbitrary file formats can be explicitly imported into the f
   await expect(page.locator('#fileList')).toContainText('custom.data');
 });
 
+
+test('file vault imports folders and preserves relative paths', async ({ page }) => {
+  const fs = require('fs');
+  const os = require('os');
+  const path = require('path');
+  const folder = fs.mkdtempSync(path.join(os.tmpdir(), 'advanced-notes-folder-'));
+  fs.mkdirSync(path.join(folder, 'docs', 'guides'), { recursive: true });
+  fs.writeFileSync(path.join(folder, 'README.md'), '# Folder import');
+  fs.writeFileSync(path.join(folder, 'docs', 'guides', 'setup.txt'), 'Install steps');
+  await page.locator('#fileVaultBtn').click();
+  await expect(page.locator('#fileAddFolder')).toBeVisible();
+  await page.locator('#fileFolderInput').setInputFiles(folder);
+  await expect(page.locator('#fileList')).toContainText('README.md');
+  await expect(page.locator('#fileList')).toContainText('docs/guides/setup.txt');
+  await expect(page.locator('#fileList')).toContainText('Folder path preserved');
+  fs.rmSync(folder, { recursive: true, force: true });
+});
+
 test('source-code files can be imported directly into the code library', async ({ page }) => {
   await page.locator('#codeLibraryBtn').click();
   await page.locator('#codeImportSource').click();
