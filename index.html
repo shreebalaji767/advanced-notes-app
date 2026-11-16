@@ -435,4 +435,57 @@ renderSavedSearches();
 })();
 </script>
 
+
+<script>
+(()=>{'use strict';
+const search=$('#search'),items=$('#items'),baseRender=render;
+search.placeholder='Search… title: tag: folder: is:pinned (Ctrl+K)';
+search.title='Advanced search: tag:work, folder:Projects, title:meeting, content:idea, is:pinned, is:favorite, after:2026-01-01, before:2026-12-31, has:due';
+function parseQuery(value){
+ const tokens=value.match(/(?:[^\s"]+|"[^"]*")+/g)||[],terms=[],filters=[];
+ for(const raw of tokens){
+  const token=raw.replace(/^"|"$/g,''),at=token.indexOf(':');
+  if(at<1){terms.push(token);continue}
+  const key=token.slice(0,at).toLowerCase(),val=token.slice(at+1).replace(/^"|"$/g,'');
+  if(['tag','folder','title','content','is','before','after','has'].includes(key)&&val)filters.push({key,val:val.toLowerCase()});
+  else terms.push(token);
+ }
+ return {terms:terms.join(' '),filters};
+}
+function matches(note,filters){
+ const body=text(note).toLowerCase(),title=(note.title||'').toLowerCase(),tags=(note.tags||[]).map(x=>x.toLowerCase());
+ return filters.every(({key,val})=>{
+  if(key==='tag')return tags.some(x=>x.includes(val));
+  if(key==='folder'){const f=data.folders.find(x=>x.id===note.folder);return !!f&&f.name.toLowerCase().includes(val)}
+  if(key==='title')return title.includes(val);
+  if(key==='content')return body.includes(val);
+  if(key==='is')return val==='pinned'?!!note.pinned:val==='favorite'?!!note.favorite:val==='archived'?!!note.archived:val==='deleted'?!!note.deleted:false;
+  if(key==='before')return /^\d{4}-\d{2}-\d{2}$/.test(val)&&(note.updated||'').slice(0,10)<=val;
+  if(key==='after')return /^\d{4}-\d{2}-\d{2}$/.test(val)&&(note.updated||'').slice(0,10)>=val;
+  if(key==='has')return val==='due'?!!note.due:val==='tags'?tags.length>0:false;
+  return true;
+ });
+}
+render=function(){
+ const parsed=parseQuery(search.value);
+ search.value=parsed.terms;
+ baseRender();
+ search.value=parsed.terms;
+ const cards=[...items.querySelectorAll('.note')];
+ let shown=0;
+ cards.forEach(card=>{
+  const note=data.notes.find(n=>n.id===card.dataset.id),ok=!!note&&matches(note,parsed.filters);
+  card.hidden=!ok;if(ok)shown++;
+ });
+ let empty=$('#advancedSearchEmpty');
+ if(!empty){empty=document.createElement('div');empty.id='advancedSearchEmpty';empty.className='empty';items.append(empty)}
+ empty.hidden=!(parsed.filters.length&&shown===0);
+ empty.textContent='No notes match these filters. Try tag:, folder:, title:, is:pinned, after: or before:.';
+ if(parsed.filters.length)$('#count').textContent=shown+' matching notes';
+};
+search.oninput=render;
+render();
+})();
+</script>
+
 </body></html>
