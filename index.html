@@ -75,4 +75,63 @@ $('#items').addEventListener('contextmenu',e=>{const b=e.target.closest('[data-i
 document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.shiftKey&&e.key.toLowerCase()==='n'){e.preventDefault();$('#daily').click()}});
 })();
 </script>
+
+<script>
+(()=>{'use strict';
+data.tasks=Array.isArray(data.tasks)?data.tasks:[];
+const modal=$('#modal');
+const safeDate=s=>{const d=new Date(s+'T12:00:00');return Number.isNaN(d.getTime())?null:d};
+const openModal=html=>{modal.innerHTML='<div class="modal"><div class="card" style="width:min(760px,100%);max-height:85vh;overflow:auto">'+html+'</div></div>';};
+const closeModal=()=>{modal.innerHTML=''};
+const esc=escape;
+function taskDialog(){
+ const rows=data.tasks.map((t,i)=>'<div style="display:flex;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)"><input type="checkbox" data-taskdone="'+i+'" '+(t.done?'checked':'')+'><span style="flex:1;'+(t.done?'text-decoration:line-through;opacity:.6':'')+'">'+esc(t.text)+'</span><small>'+esc(t.due||'No due date')+'</small><button data-taskedit="'+i+'">Edit</button><button data-taskdel="'+i+'">×</button></div>').join('');
+ openModal('<h2>Task manager</h2><p class="muted">Track standalone tasks locally. Tasks are included in workspace backups.</p><form id="taskForm" style="display:flex;gap:6px;flex-wrap:wrap"><input id="taskText" placeholder="Add a task…" required style="flex:1;min-width:180px;padding:9px;border:1px solid var(--line)"><input id="taskDue" type="date" style="padding:8px;border:1px solid var(--line)"><button class="primary">Add task</button></form><div style="margin-top:12px">'+(rows||'<p class="empty">No tasks yet. Add one above.</p>')+'</div><p style="text-align:right"><button id="taskClose">Close</button></p>');
+ $('#taskForm').onsubmit=async e=>{e.preventDefault();data.tasks.push({id:uid(),text:$('#taskText').value.trim(),due:$('#taskDue').value,done:false,created:date()});await save();taskDialog()};
+ modal.querySelectorAll('[data-taskdone]').forEach(x=>x.onchange=async()=>{data.tasks[+x.dataset.taskdone].done=x.checked;await save();taskDialog()});
+ modal.querySelectorAll('[data-taskdel]').forEach(x=>x.onclick=async()=>{data.tasks.splice(+x.dataset.taskdel,1);await save();taskDialog()});
+ modal.querySelectorAll('[data-taskedit]').forEach(x=>x.onclick=async()=>{const t=data.tasks[+x.dataset.taskedit],v=prompt('Edit task',t.text);if(v!==null&&v.trim())t.text=v.trim();await save();taskDialog()});
+ $('#taskClose').onclick=closeModal;
+}
+function calendarDialog(month=new Date()){
+ const year=month.getFullYear(),mo=month.getMonth(),first=new Date(year,mo,1),start=new Date(year,mo,1-first.getDay()),days=[];
+ for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);const key=d.toISOString().slice(0,10);const notes=data.notes.filter(n=>!n.deleted&&!n.archived&&(n.due===key||n.dailyDate===key));days.push('<div style="min-height:74px;border:1px solid var(--line);padding:5px;background:'+(d.getMonth()===mo?'white':'#eef1f4')+'"><small>'+d.getDate()+'</small>'+notes.map(n=>'<button data-calnote="'+esc(n.id)+'" style="display:block;width:100%;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:0;background:#dce8f3;margin-top:3px;padding:3px"> '+esc(n.title||'Untitled')+'</button>').join('')+'</div>')}
+ openModal('<div style="display:flex;align-items:center;gap:8px"><button id="calPrev">‹</button><h2 style="flex:1;margin:0">'+month.toLocaleString(undefined,{month:'long',year:'numeric'})+'</h2><button id="calNext">›</button></div><p class="muted">Shows notes due on each date and daily journal entries. Select an entry to open it.</p><div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;margin-top:10px">'+['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(x=>'<b style="text-align:center;padding:5px">'+x+'</b>').join('')+days.join('')+'</div><p style="text-align:right"><button id="calClose">Close</button></p>');
+ $('#calPrev').onclick=()=>calendarDialog(new Date(year,mo-1,1));$('#calNext').onclick=()=>calendarDialog(new Date(year,mo+1,1));$('#calClose').onclick=closeModal;
+ modal.querySelectorAll('[data-calnote]').forEach(b=>b.onclick=async()=>{await saveNote();id=b.dataset.calnote;view='all';folderView='';tagView='';closeModal();render();});
+}
+function historyDialog(){
+ const n=current();if(!n)return toast('Select a note first');
+ const hist=(n.history||[]).slice().reverse();
+ if(!hist.length)return toast('No saved versions yet');
+ const options=hist.map((h,i)=>'<option value="'+i+'">'+(i+1)+'. '+new Date(h.updated).toLocaleString()+' — '+esc(h.title||'Untitled')+'</option>').join('');
+ openModal('<h2>Version history</h2><p class="muted">Up to 20 autosaved snapshots are kept per note on this device.</p><label>Choose a version</label><select id="histPick" style="width:100%;padding:8px;margin:6px 0">'+options+'</select><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><section><b>Selected version</b><pre id="histSelected" style="white-space:pre-wrap;max-height:260px;overflow:auto;background:#eef1f4;padding:10px"></pre></section><section><b>Current note</b><pre id="histCurrent" style="white-space:pre-wrap;max-height:260px;overflow:auto;background:#eef1f4;padding:10px"></pre></section></div><p><button id="histRestore" class="primary">Restore selected version</button> <button id="histExport">Export selected version</button> <button id="histClose">Close</button></p>');
+ const display=h=>h.title+'\n\n'+(new DOMParser().parseFromString(sanitizeHtml(h.content),'text/html').body.textContent||'');
+ const update=()=>{$('#histSelected').textContent=display(hist[+$('#histPick').value]);$('#histCurrent').textContent=(n.title||'Untitled')+'\n\n'+text(n)};
+ $('#histPick').onchange=update;update();
+ $('#histRestore').onclick=async()=>{const h=hist[+$('#histPick').value];if(!confirm('Restore this snapshot? The current content will first be saved in history.'))return;n.history=n.history||[];n.history.push({title:n.title,content:n.content,updated:date()});n.title=h.title;n.content=h.content;n.markdown='';n.markdownMode=false;n.updated=date();await save();closeModal();render();toast('Version restored')};
+ $('#histExport').onclick=()=>{const h=hist[+$('#histPick').value];download(new Blob([display(h)],{type:'text/plain;charset=utf-8'}),(h.title||'note')+'-version.txt')};
+ $('#histClose').onclick=closeModal;
+}
+function improvedSettings(){
+ const oldEncryption=()=>{if(encrypted)return toast('Encryption already enabled');ask('Set workspace password','Use at least 8 characters. Keep it safe; it cannot be recovered.',async pass=>{if(pass.length<8)return toast('Use at least 8 characters');let salt=crypto.getRandomValues(new Uint8Array(16));cryptoKey=await derive(pass,salt);localStorage.setItem(keyName+'_salt',b64(salt));encrypted=true;await save();toast('Encryption enabled')})};
+ openModal('<h2>Workspace settings</h2><p class="muted">All notes and tasks remain in this browser unless you export a backup.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button id="setEncrypt">Enable password encryption</button><button id="setHistory">Browse version history</button><button id="setTasks">Task manager</button><button id="setCalendar">Calendar</button><button id="setExport">Export current note (.md)</button><button id="setHtml">Export current note (.html)</button><button id="setImport">Import backup</button><button id="setClose">Close</button></div><p class="muted" style="margin-top:15px">Encryption uses AES-256-GCM with PBKDF2. A forgotten password cannot be recovered.</p>');
+ $('#setEncrypt').onclick=oldEncryption;$('#setHistory').onclick=historyDialog;$('#setTasks').onclick=taskDialog;$('#setCalendar').onclick=calendarDialog;
+ $('#setExport').onclick=()=>{const n=current();if(!n)return toast('Select a note first');download(new Blob([n.markdownMode?n.markdown:toMd(n.content)],{type:'text/markdown;charset=utf-8'}),(n.title||'note')+'.md')};
+ $('#setHtml').onclick=()=>{const n=current();if(!n)return toast('Select a note first');const html='<!doctype html><meta charset="utf-8"><title>'+esc(n.title)+'</title><article><h1>'+esc(n.title)+'</h1>'+sanitizeHtml(n.content)+'</article>';download(new Blob([html],{type:'text/html;charset=utf-8'}),(n.title||'note')+'.html')};
+ $('#setImport').onclick=()=>{const i=document.createElement('input');i.type='file';i.accept='.json,application/json';i.onchange=async()=>{try{const raw=JSON.parse(await i.files[0].text());let vault;if(raw.format==='AdvancedNotesBackup'){vault=JSON.parse(raw.vault);if(raw.salt)localStorage.setItem(keyName+'_salt',raw.salt)}else vault=raw;if(!vault||typeof vault!=='object'||!Array.isArray(vault.notes)||!Array.isArray(vault.folders))throw Error('Backup structure is not valid');if(vault.notes.some(n=>!n||typeof n.id!=='string'||typeof n.title!=='string'||typeof n.content!=='string'))throw Error('One or more notes have invalid fields');if(!confirm('Replace the current workspace with '+vault.notes.length+' notes? Export a backup first if needed.'))return;localStorage.setItem(keyName,JSON.stringify(raw.format==='AdvancedNotesBackup'?{encrypted:!!vault.encrypted,salt:raw.salt||vault.salt,iv:vault.iv,data:vault.data}: {encrypted:false,data:JSON.stringify(vault)}));location.reload()}catch(err){toast('Import failed: '+err.message)}};i.click()};
+ $('#setClose').onclick=closeModal;
+}
+$('#settings').onclick=improvedSettings;
+$('#daily').insertAdjacentHTML('afterend','<button id="calendarBtn">Calendar</button><button id="tasksBtn">Tasks</button>');
+$('#calendarBtn').onclick=()=>calendarDialog();$('#tasksBtn').onclick=taskDialog;
+const oldBackup=backup;
+backup=async()=>{await saveNote();const vault=localStorage.getItem(keyName);download(new Blob([JSON.stringify({format:'AdvancedNotesBackup',vault,salt:localStorage.getItem(keyName+'_salt')})],{type:'application/json'}),'advanced-notes-backup.json');localStorage.setItem('advanced-notes-last-backup',date());toast('Backup exported')};
+const last=localStorage.getItem('advanced-notes-last-backup');
+if(!last||Date.now()-new Date(last).getTime()>7*86400000){setTimeout(()=>{if(unlocked)toast('Backup reminder: export a backup to protect your notes')},1800)}
+// Persist task-manager state and ensure a newly created vault has the task collection.
+if(unlocked&&!Array.isArray(data.tasks)){data.tasks=[];save();}
+})();
+</script>
+
 </body></html>
