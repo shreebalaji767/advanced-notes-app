@@ -19,7 +19,8 @@ A free, static, offline-capable notes workspace built with vanilla HTML, CSS and
 - Backup and restore with validation for encrypted and unencrypted backups
 - Weekly backup reminder, Markdown export and standalone HTML export
 - Version-history browser with side-by-side text comparison, restore and export
-- Installable PWA with an offline app shell
+- Installable PWA with scalable 192px and 512px SVG icons and an offline app shell
+- Automated Chromium desktop and mobile regression tests in GitHub Actions; deployment waits for tests to pass
 - Keyboard shortcuts: Ctrl/Cmd+S to save, Ctrl/Cmd+K to search, Ctrl/Cmd+Shift+N for a daily note
 
 ## Deploy
@@ -33,3 +34,16 @@ Notes and tasks are stored locally in this browser. Optional encryption uses AES
 
 ## Limitations
 This is a local single-device app. It does not sync across devices or provide collaboration. Browser storage is not a substitute for an independent backup. Offline support requires HTTPS or localhost. The calendar currently visualizes due dates and journal entries; it is not a full scheduling system. The task manager is separate from inline note checklists.
+
+
+## Automated browser tests
+
+The GitHub Actions workflow installs Playwright and Chromium, then runs the regression suite in `tests/` before publishing. To run it locally:
+
+```sh
+npm install --no-save @playwright/test
+npx playwright install chromium
+npx playwright test
+```
+
+The suite checks workspace loading, local note persistence, task creation, calendar navigation, PWA icon assets and mobile control visibility. Browser tests use a temporary local HTTP server and do not access or modify a user's existing browser storage.
