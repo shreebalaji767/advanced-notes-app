@@ -2,7 +2,7 @@ const { test, expect } = require('@playwright/test');
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
-  await page.evaluate(() => {
+  await page.evaluate(async () => {
     localStorage.clear();
     sessionStorage.clear();
     await new Promise(resolve => { const request = indexedDB.deleteDatabase('advanced-notes-file-vault'); request.onsuccess = request.onerror = request.onblocked = () => resolve(); });
