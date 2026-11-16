@@ -3,7 +3,10 @@
 A free, static, offline-capable notes workspace built with vanilla HTML, CSS and JavaScript.
 
 ## Features
-- Rich-text editor and Markdown editing/preview
+- Rich-text editor with headings, code blocks, checklists and tables
+- Markdown editing/preview
+- Daily journal templates, due dates, pinned notes and dark mode
+- Duplicate notes and print-friendly output
 - Notes, folders, tags, favorites, archive and recycle bin
 - Search, sorting, word and character counts
 - Autosave to browser local storage
