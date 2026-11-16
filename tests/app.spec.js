@@ -5,6 +5,7 @@ test.beforeEach(async ({ page }) => {
   await page.evaluate(() => {
     localStorage.clear();
     sessionStorage.clear();
+    await new Promise(resolve => { const request = indexedDB.deleteDatabase('advanced-notes-file-vault'); request.onsuccess = request.onerror = request.onblocked = () => resolve(); });
   });
   await page.reload();
 });
@@ -170,4 +171,25 @@ test('code snippets can be saved, searched, copied, downloaded and survive reloa
   await page.locator('#codeLibraryBtn').click();
   await expect(page.locator('#codeList')).toContainText('Example JavaScript');
   await expect(page.locator('#snippetSource')).toHaveValue('const answer = 42;\\nconsole.log(answer);');
+});
+
+test('universal file vault saves arbitrary formats and restores original file bytes', async ({ page }) => {
+  await page.locator('#fileVaultBtn').click();
+  const file = {
+    name: 'sample.customdata',
+    mimeType: 'application/octet-stream',
+    buffer: Buffer.from([0, 1, 2, 3, 10, 13, 255])
+  };
+  await page.locator('#fileInput').setInputFiles(file);
+  await expect(page.locator('#fileList')).toContainText('sample.customdata');
+  const downloadPromise = page.waitForEvent('download');
+  await page.locator('[data-file-download]').click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe('sample.customdata');
+  const path = await download.path();
+  const fs = require('fs');
+  expect(fs.readFileSync(path)).toEqual(file.buffer);
+  await page.reload();
+  await page.locator('#fileVaultBtn').click();
+  await expect(page.locator('#fileList')).toContainText('sample.customdata');
 });
