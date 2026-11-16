@@ -20,6 +20,7 @@ A free, static, offline-capable notes workspace built with vanilla HTML, CSS and
 - Notes, nested folders, tags, favorites, pinned notes, archive and restorable recycle bin
 - Smart views for pinned notes and notes due within the next seven days
 - Basic HTML sanitization for imported and rendered note content
+- Advanced note search supports combined free-text and `tag:`, `folder:`, `title:`, `content:`, `is:pinned`, `is:favorite`, `after:`, `before:` and `has:due` filters; saved searches can store and reuse filter queries
 - Search, sorting, word and character counts
 - Autosave to browser local storage; code snippets are stored in the same local vault and included in encrypted backups
 - Optional AES-256-GCM encryption with PBKDF2 password derivation
