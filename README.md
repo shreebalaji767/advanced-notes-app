@@ -7,7 +7,9 @@ A free, static, offline-capable notes workspace built with vanilla HTML, CSS and
 - Markdown editing/preview
 - Daily journal templates, due dates, pinned notes and dark mode
 - Duplicate notes and print-friendly output
-- Notes, folders, tags, favorites, archive and recycle bin
+- Notes, nested folders, tags, favorites, pinned notes, archive and restorable recycle bin
+- Smart views for pinned notes and notes due within the next seven days
+- Basic HTML sanitization for imported and rendered note content
 - Search, sorting, word and character counts
 - Autosave to browser local storage
 - Optional AES-256-GCM encryption with PBKDF2 password derivation
