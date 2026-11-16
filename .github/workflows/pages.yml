@@ -36,8 +36,45 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-      - name: Prepare static site
-        run: mkdir site && cp index.html manifest.json sw.js site/ && cp -R icons site/icons
+      - name: Prepare static site and generate favicon.ico
+        run: |
+          mkdir site
+          cp index.html manifest.json sw.js site/
+          cp -R icons site/icons
+          python3 - <<'PY'
+          import struct, zlib
+          width = height = 32
+          pixels = bytearray(width * height * 4)
+          blue = (49, 95, 139, 255)
+          def dot(x, y, color=blue):
+              for yy in range(y-1, y+2):
+                  for xx in range(x-1, x+2):
+                      if 0 <= xx < width and 0 <= yy < height:
+                          i = (yy * width + xx) * 4
+                          pixels[i:i+4] = bytes(color)
+          def line(x0, y0, x1, y1):
+              dx, sx = abs(x1-x0), 1 if x0 < x1 else -1
+              dy, sy = -abs(y1-y0), 1 if y0 < y1 else -1
+              err = dx + dy
+              while True:
+                  dot(x0, y0)
+                  if x0 == x1 and y0 == y1: break
+                  e2 = 2 * err
+                  if e2 >= dy: err += dy; x0 += sx
+                  if e2 <= dx: err += dx; y0 += sy
+          # Transparent document outline with a folded top-right corner.
+          for a,b in [((9,4),(20,4)),((20,4),(27,11)),((27,11),(27,28)),((27,28),(8,28)),((8,28),(6,26)),((6,26),(6,6)),((6,6),(8,4)),((20,4),(20,11)),((20,11),(27,11))]:
+              line(*a,*b)
+          for y, end in [(16,23),(20,23),(24,19)]:
+              line(11,y,end,y)
+          raw = b''.join(b'\\x00' + bytes(pixels[y*width*4:(y+1)*width*4]) for y in range(height))
+          def chunk(kind, data):
+              body = kind + data
+              return struct.pack('>I',len(data)) + body + struct.pack('>I',zlib.crc32(body)&0xffffffff)
+          png = b'\\x89PNG\\r\\n\\x1a\\n' + chunk(b'IHDR',struct.pack('>2I5B',width,height,8,6,0,0,0)) + chunk(b'IDAT',zlib.compress(raw,9)) + chunk(b'IEND',b'')
+          ico = struct.pack('<HHH',0,1,1) + struct.pack('<BBBBHHII',32,32,0,0,1,32,len(png),22) + png
+          open('site/favicon.ico','wb').write(ico)
+          PY
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
