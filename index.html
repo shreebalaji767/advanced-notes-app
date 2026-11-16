@@ -467,10 +467,10 @@ function matches(note,filters){
  });
 }
 render=function(){
- const parsed=parseQuery(search.value);
+ const original=search.value,parsed=parseQuery(original);
  search.value=parsed.terms;
  baseRender();
- search.value=parsed.terms;
+ search.value=original;
  const cards=[...items.querySelectorAll('.note')];
  let shown=0;
  cards.forEach(card=>{
