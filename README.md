@@ -4,7 +4,8 @@ A free, static, offline-capable notes workspace built with vanilla HTML, CSS and
 
 ## Features
 - Classic three-pane desktop workspace with responsive tablet and mobile layouts
-- Rich-text editor with headings, code blocks, checklists, tables, links and formatting tools
+- Rich-text editor with headings, inline code blocks, checklists, tables, links and formatting tools
+- Dedicated local code snippet library for JavaScript, Python, HTML, CSS, SQL and many more languages; save, search, copy, download, tag, import and export snippets
 - Markdown editing and preview
 - Daily journal templates, due dates, pinned notes and dark mode
 - Standalone task manager with completion tracking and due dates
@@ -14,7 +15,7 @@ A free, static, offline-capable notes workspace built with vanilla HTML, CSS and
 - Smart views for pinned notes and notes due within the next seven days
 - Basic HTML sanitization for imported and rendered note content
 - Search, sorting, word and character counts
-- Autosave to browser local storage
+- Autosave to browser local storage; code snippets are stored in the same local vault and included in encrypted backups
 - Optional AES-256-GCM encryption with PBKDF2 password derivation
 - Backup and restore with validation for encrypted and unencrypted backups
 - Weekly backup reminder, Markdown export and standalone HTML export
