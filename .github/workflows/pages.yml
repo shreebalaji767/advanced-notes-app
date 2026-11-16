@@ -15,13 +15,29 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install browser test tools
+        run: npm install --no-save @playwright/test
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run browser regression tests
+        run: npx playwright test
+
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
       - name: Prepare static site
-        run: mkdir site && cp index.html manifest.json sw.js site/
+        run: mkdir site && cp index.html manifest.json sw.js site/ && cp -R icons site/icons
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
@@ -31,7 +47,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-    needs: build
+    needs: [test, build]
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
