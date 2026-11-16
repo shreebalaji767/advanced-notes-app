@@ -67,11 +67,11 @@ jobs:
               line(*a,*b)
           for y, end in [(16,23),(20,23),(24,19)]:
               line(11,y,end,y)
-          raw = b''.join(b'\\x00' + bytes(pixels[y*width*4:(y+1)*width*4]) for y in range(height))
+          raw = b''.join(b'\x00' + bytes(pixels[y*width*4:(y+1)*width*4]) for y in range(height))
           def chunk(kind, data):
               body = kind + data
               return struct.pack('>I',len(data)) + body + struct.pack('>I',zlib.crc32(body)&0xffffffff)
-          png = b'\\x89PNG\\r\\n\\x1a\\n' + chunk(b'IHDR',struct.pack('>2I5B',width,height,8,6,0,0,0)) + chunk(b'IDAT',zlib.compress(raw,9)) + chunk(b'IEND',b'')
+          png = b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR',struct.pack('>2I5B',width,height,8,6,0,0,0)) + chunk(b'IDAT',zlib.compress(raw,9)) + chunk(b'IEND',b'')
           ico = struct.pack('<HHH',0,1,1) + struct.pack('<BBBBHHII',32,32,0,0,1,32,len(png),22) + png
           open('site/favicon.ico','wb').write(ico)
           PY
