@@ -78,7 +78,28 @@ $('#title').oninput=schedule;$('#rich').oninput=()=>{schedule();counts($('#rich'
 $$('[data-cmd]').forEach(b=>b.onclick=()=>{document.execCommand(b.dataset.cmd,false,b.dataset.value||null);$('#rich').focus();schedule()});
 $('#markdown').onclick=()=>{if(!current())return;if(!markdown)$('#md').value=toMd($('#rich').innerHTML);else $('#rich').innerHTML=mdHtml($('#md').value);markdown=!markdown;preview=false;sync();renderOutline();schedule()};
 $('#preview').onclick=()=>{if(!current())return;if(!preview)$('#previewPane').innerHTML=sanitizeHtml(mdHtml(markdown?$('#md').value:toMd($('#rich').innerHTML)));preview=!preview;sync();renderOutline()};
-function renderOutline(){const panel=$('#outlineItems');if(!panel)return;let rows=[];if(markdown){const lines=$('#md').value.split('\\n');lines.forEach((line,index)=>{const m=line.match(/^(#{1,6})\\s+(.+)$/);if(m)rows.push({text:m[2].trim(),level:m[1].length,line:index})})}else{$('#rich h1,#rich h2,#rich h3,#rich h4,#rich h5,#rich h6').forEach((node,index)=>rows.push({text:node.textContent.trim(),level:Number(node.tagName.slice(1)),index}))}panel.innerHTML=rows.length?rows.map((r,i)=>'<button type="button" class="outline-item" data-outline-index="'+i+'" data-level="'+r.level+'">'+escape(r.text||'Untitled heading')+'</button>').join(''):'<p class="muted">Add headings to build an outline.</p>';panel.querySelectorAll('[data-outline-index]').forEach((button,i)=>button.onclick=()=>{const target=rows[i];if(markdown){const lines=$('#md').value.split('\\n');let start=0;for(let n=0;n<target.line;n++)start+=lines[n].length+1;$('#md').focus();$('#md').setSelectionRange(start,start+lines[target.line].length);$('#md').scrollTop=Array.from(lines).slice(0,target.line).join('\\n').length*0.55}else{const nodes=$('#rich h1,#rich h2,#rich h3,#rich h4,#rich h5,#rich h6');nodes[target.index]?.scrollIntoView({block:'center',behavior:'smooth'});$('#rich').focus()}})}
+function renderOutline(){
+ const panel=$('#outlineItems');if(!panel)return;let rows=[];
+ if(markdown){
+  const lines=$('#md').value.split(/\r?\n/);
+  lines.forEach((line,index)=>{const match=line.match(/^(#{1,6})\s+(.+)$/);if(match)rows.push({text:match[2].trim(),level:match[1].length,line:index})});
+ }else{
+  $$('#rich h1,#rich h2,#rich h3,#rich h4,#rich h5,#rich h6').forEach((node,index)=>rows.push({text:node.textContent.trim(),level:Number(node.tagName.slice(1)),index}));
+ }
+ panel.innerHTML=rows.length?rows.map((row,index)=>'<button type="button" class="outline-item" data-outline-index="'+index+'" data-level="'+row.level+'">'+escape(row.text||'Untitled heading')+'</button>').join(''):'<p class="muted">Add headings to build an outline.</p>';
+ panel.querySelectorAll('[data-outline-index]').forEach((button,index)=>button.onclick=()=>{
+  const target=rows[index];
+  if(markdown){
+   const lines=$('#md').value.split(/\r?\n/);let offset=0;
+   for(let line=0;line<target.line;line++)offset+=lines[line].length+1;
+   $('#md').focus();$('#md').setSelectionRange(offset,offset+lines[target.line].length);
+   $('#md').scrollTop=Math.max(0,target.line*24);
+  }else{
+   const nodes=$$('#rich h1,#rich h2,#rich h3,#rich h4,#rich h5,#rich h6');
+   nodes[target.index]?.scrollIntoView({block:'center',behavior:'smooth'});$('#rich').focus();
+  }
+ });
+}
 $('#outlineBtn').onclick=()=>{if(!current())return;renderOutline();$('#outlinePanel').classList.toggle('hidden');sync()};$('#outlineClose').onclick=()=>{$('#outlinePanel').classList.add('hidden');sync()};
 
 $('#favorite').onclick=()=>{let n=current();if(n){n.favorite=!n.favorite;schedule();renderEditor()}};
