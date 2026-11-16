@@ -104,3 +104,12 @@ test('header logo, favicon, and PWA icons use the same transparent artwork', asy
   expect(artwork[0]).toBe(artwork[1]);
   expect(artwork[0]).not.toMatch(/<rect\\b/i);
 });
+
+test('deployed root favicon.ico is served successfully', async ({ page }) => {
+  test.skip(!process.env.BASE_URL, 'favicon.ico is generated in the Pages build artifact');
+  const response = await page.request.get(new URL('./favicon.ico', page.url()).toString());
+  expect(response.ok()).toBeTruthy();
+  expect(response.headers()['content-type']).toMatch(/image\\/(x-icon|vnd.microsoft.icon|ico)/i);
+  const bytes = await response.body();
+  expect(bytes.subarray(0, 4)).toEqual(Buffer.from([0, 0, 1, 0]));
+});
