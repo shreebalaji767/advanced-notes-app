@@ -11,7 +11,8 @@ A free, static, offline-capable notes workspace built with vanilla HTML, CSS and
 - Explicit multi-file import for documents and code in virtually any file format, plus drag-and-drop, IndexedDB binary storage, search, previews for common formats, download, delete and independent file-vault backup/restore
 - Direct source-code file import into the code library with automatic language detection for common extensions; text-based source files are imported while binary files remain in the universal file vault
 - Complete workspace backups include notes, code snippets and stored files; optional workspace encryption also encrypts file contents
-- Markdown editing and preview
+- Markdown editing with split live preview, nested heading outline and support for headings, lists, quotes, links, inline/fenced code and horizontal rules
+- One-click import of plain-text, Markdown, HTML and common text documents as editable notes; PDFs and office documents remain preserved in original form in the file vault
 - Daily journal templates, due dates, pinned notes and dark mode
 - Standalone task manager with completion tracking and due dates
 - Monthly calendar for due notes and daily journal entries
@@ -42,7 +43,7 @@ Serve this folder over localhost (needed for Web Crypto and service workers), fo
 Notes and tasks are stored locally in this browser. Optional encryption uses AES-256-GCM and PBKDF2. The password cannot be recovered; if forgotten, encrypted notes cannot be decrypted. Export a backup and keep the password safe. The HTML sanitizer is a defense-in-depth measure, not a formal security audit.
 
 ## Limitations
-This is a local single-device app. It does not sync across devices or provide collaboration. Browser storage is not a substitute for an independent backup. Offline support requires HTTPS or localhost. The calendar currently visualizes due dates and journal entries; it is not a full scheduling system. The task manager is separate from inline note checklists.
+This is a local single-device app. It does not sync across devices or provide collaboration. Browser storage is not a substitute for an independent backup. Offline support requires HTTPS or localhost. The calendar currently visualizes due dates and journal entries; it is not a full scheduling system. The task manager is separate from inline note checklists. PDF and DOCX files are stored in their original form in the File Vault; automatic conversion of those binary formats into editable note text is not included.
 
 
 ## Automated browser tests
