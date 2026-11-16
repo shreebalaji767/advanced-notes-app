@@ -7,7 +7,8 @@ A free, static, offline-capable notes workspace built with vanilla HTML, CSS and
 - Rich-text editor with headings, inline code blocks, checklists, tables, links and formatting tools
 - Dedicated local code snippet library for JavaScript, Python, HTML, CSS, SQL and many more languages; save, search, copy, download, tag, import and export snippets
 - Universal file vault for original files of almost any format: documents, PDFs, spreadsheets, images, audio, video, archives, source code and unknown file types
-- IndexedDB binary storage with multi-file upload, drag-and-drop, search, previews for common formats, download, delete and independent file-vault backup/restore
+- Explicit multi-file import for documents and code in virtually any file format, plus drag-and-drop, IndexedDB binary storage, search, previews for common formats, download, delete and independent file-vault backup/restore
+- Direct source-code file import into the code library with automatic language detection for common extensions; text-based source files are imported while binary files remain in the universal file vault
 - Complete workspace backups include notes, code snippets and stored files; optional workspace encryption also encrypts file contents
 - Markdown editing and preview
 - Daily journal templates, due dates, pinned notes and dark mode
