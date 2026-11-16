@@ -219,7 +219,7 @@ test('source-code files can be imported directly into the code library', async (
   });
   await expect(page.locator('#codeList')).toContainText('hello.py');
   await expect(page.locator('#snippetLanguage')).toHaveValue('Python');
-  await expect(page.locator('#snippetSource')).toContainText('Hello from Python');
+  await expect(page.locator('#snippetSource')).toHaveValue(/Hello from Python/);
   await page.reload();
   await page.locator('#codeLibraryBtn').click();
   await expect(page.locator('#codeList')).toContainText('hello.py');
