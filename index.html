@@ -199,4 +199,64 @@ renderSavedSearches();
 })();
 </script>
 
+
+<script>
+(()=>{
+ 'use strict';
+ const style=document.createElement('style');
+ style.textContent='.focus-mode main{grid-template-columns:minmax(0,1fr)}.focus-mode .nav,.focus-mode .list{display:none}.focus-mode .editor{max-width:980px;width:100%;margin:0 auto;box-shadow:0 0 0 1px var(--line)}.focus-mode #app{grid-template-rows:42px 1fr 24px}.related{padding:8px 20px;border-bottom:1px solid #edf0f3;background:#fbfcfd;font-size:12px}.related button{margin:2px 4px 2px 0;border:1px solid var(--line);background:white;border-radius:4px;padding:4px 7px}.template-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.template-grid button{text-align:left;padding:12px;border:1px solid var(--line);background:white;border-radius:5px}.template-grid button small{display:block;color:#657384;margin-top:4px}@media(max-width:760px){.focus-mode main{grid-template-rows:minmax(300px,1fr)}.focus-mode .editor{max-width:none}.related{padding:7px 12px}}';
+ document.head.append(style);
+ const toolbar=$('.toolbar');
+ toolbar.insertAdjacentHTML('beforeend','<button class="tool" id="templatesBtn" title="Create from a template">Templates</button><button class="tool" id="linkNoteBtn" title="Link another note">Link note</button><button class="tool" id="focusBtn" title="Toggle distraction-free editor">Focus</button>');
+ $('.sub').insertAdjacentHTML('afterend','<div class="related hidden" id="relatedNotes" aria-live="polite"></div>');
+ function relatedRender(){
+  const host=$('#relatedNotes'),n=current();
+  if(!n){host.classList.add('hidden');host.innerHTML='';return}
+  const links=Array.isArray(n.relatedNotes)?n.relatedNotes:[];
+  const targets=links.map(x=>data.notes.find(y=>y.id===x&&!y.deleted)).filter(Boolean);
+  const backlinks=data.notes.filter(x=>!x.deleted&&x.id!==n.id&&(x.relatedNotes||[]).includes(n.id));
+  const all=[...targets.map(x=>({n:x,label:'Linked: '})),...backlinks.map(x=>({n:x,label:'Backlink: '}))];
+  host.classList.remove('hidden');
+  host.innerHTML='<b>Related notes</b> '+(all.length?all.map(x=>'<button data-open-related="'+escape(x.n.id)+'">'+x.label+escape(x.n.title||'Untitled')+'</button>').join(''):'<span class="muted">No links yet</span>');
+ }
+ const originalRenderEditor=renderEditor;
+ renderEditor=function(){originalRenderEditor();relatedRender()};
+ function createFromTemplate(kind){
+  const templates={
+   blank:{title:'Untitled note',content:''},
+   meeting:{title:'Meeting notes — '+new Date().toLocaleDateString(),content:'<h2>Meeting details</h2><p><b>Date:</b> '+new Date().toLocaleDateString()+'</p><p><b>Attendees:</b></p><ul><li></li></ul><h2>Agenda</h2><ul><li></li></ul><h2>Discussion</h2><p></p><h2>Decisions</h2><ul><li></li></ul><h2>Action items</h2><ul data-task-list><li><input type="checkbox"> </li></ul>'},
+   project:{title:'Project plan',content:'<h2>Objective</h2><p></p><h2>Scope</h2><ul><li></li></ul><h2>Milestones</h2><table><tbody><tr><th>Milestone</th><th>Target date</th><th>Status</th></tr><tr><td></td><td></td><td>Not started</td></tr></tbody></table><h2>Risks and blockers</h2><p></p><h2>Next actions</h2><ul><li></li></ul>'},
+   study:{title:'Study notes',content:'<h2>Topic</h2><p></p><h2>Key concepts</h2><ul><li></li></ul><h2>Examples</h2><p></p><h2>Questions to revisit</h2><ul><li></li></ul><h2>Summary</h2><p></p>'},
+   journal:{title:'Daily journal — '+new Date().toLocaleDateString(),content:'<h2>Today</h2><p></p><h2>What went well?</h2><p></p><h2>What could improve?</h2><p></p><h2>Tomorrow</h2><ul><li></li></ul>'},
+   decision:{title:'Decision record',content:'<h2>Context</h2><p></p><h2>Options considered</h2><ul><li></li></ul><h2>Decision</h2><p></p><h2>Reasoning</h2><p></p><h2>Consequences</h2><p></p>'}
+  };
+  const t=templates[kind];if(!t)return;
+  const n={id:uid(),title:t.title,content:sanitizeHtml(t.content),markdown:'',markdownMode:false,folder:folderView||'',tags:[],favorite:false,archived:false,deleted:false,created:date(),updated:date(),history:[],relatedNotes:[]};
+  data.notes.unshift(n);id=n.id;view='all';folderView='';tagView='';
+  save().then(()=>{render();$('#rich').focus();toast('Template note created')});
+ }
+ $('#templatesBtn').onclick=()=>{
+  $('#modal').innerHTML='<div class="modal"><div class="card" style="width:min(560px,100%)"><h2>New note from template</h2><p class="muted">Start with a ready-made structure. Everything stays on this device.</p><div class="template-grid">'+[
+   ['meeting','Meeting notes','Agenda, decisions and action items'],['project','Project plan','Milestones, scope and risks'],['study','Study notes','Concepts, examples and summary'],['journal','Daily journal','Reflection and tomorrow’s plan'],['decision','Decision record','Context, options and consequences'],['blank','Blank note','Start with an empty page']
+  ].map(x=>'<button data-template="'+x[0]+'"><b>'+x[1]+'</b><small>'+x[2]+'</small></button>').join('')+'</div><p style="text-align:right"><button id="templateClose">Cancel</button></p></div></div>';
+  $('#templateClose').onclick=()=>$('#modal').innerHTML='';
+  $('#modal').querySelectorAll('[data-template]').forEach(b=>b.onclick=()=>{const kind=b.dataset.template;$('#modal').innerHTML='';createFromTemplate(kind)});
+ };
+ $('#linkNoteBtn').onclick=()=>{
+  const n=current();if(!n)return toast('Select a note first');
+  const candidates=data.notes.filter(x=>!x.deleted&&!x.archived&&x.id!==n.id);
+  $('#modal').innerHTML='<div class="modal"><div class="card" style="width:min(560px,100%)"><h2>Link a related note</h2><input id="relatedSearch" placeholder="Filter notes…" style="width:100%;padding:9px;border:1px solid var(--line)"><div id="relatedChoices" style="max-height:45vh;overflow:auto;margin-top:8px"></div><p style="text-align:right"><button id="relatedClose">Close</button></p></div></div>';
+  const draw=()=>{$('#relatedChoices').innerHTML=candidates.filter(x=>(x.title+' '+text(x)).toLowerCase().includes($('#relatedSearch').value.toLowerCase())).map(x=>'<label style="display:flex;gap:8px;align-items:center;padding:8px;border-bottom:1px solid var(--line)"><input type="checkbox" data-link-choice="'+escape(x.id)+'" '+((n.relatedNotes||[]).includes(x.id)?'checked':'')+'><span>'+escape(x.title||'Untitled note')+'</span></label>').join('')||'<p class="empty">No matching notes</p>'};
+  $('#relatedSearch').oninput=draw;draw();
+  $('#relatedChoices').onchange=async e=>{const b=e.target.closest('[data-link-choice]');if(!b)return;n.relatedNotes=Array.isArray(n.relatedNotes)?n.relatedNotes:[];if(b.checked&&!n.relatedNotes.includes(b.dataset.linkChoice))n.relatedNotes.push(b.dataset.linkChoice);if(!b.checked)n.relatedNotes=n.relatedNotes.filter(x=>x!==b.dataset.linkChoice);await save();relatedRender()};
+  $('#relatedClose').onclick=()=>$('#modal').innerHTML='';
+ };
+ $('#relatedNotes').addEventListener('click',async e=>{const b=e.target.closest('[data-open-related]');if(!b)return;await saveNote();id=b.dataset.openRelated;view='all';folderView='';tagView='';$('#modal').innerHTML='';render()});
+ $('#focusBtn').onclick=()=>{document.body.classList.toggle('focus-mode');$('#focusBtn').textContent=document.body.classList.contains('focus-mode')?'Exit focus':'Focus'};
+ document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.altKey&&e.key.toLowerCase()==='f'){e.preventDefault();$('#focusBtn').click()}
+  if((e.ctrlKey||e.metaKey)&&e.altKey&&e.key.toLowerCase()==='l'){e.preventDefault();$('#linkNoteBtn').click()}
+ });
+})();
+</script>
 </body></html>
