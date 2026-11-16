@@ -193,3 +193,34 @@ test('universal file vault saves arbitrary formats and restores original file by
   await page.locator('#fileVaultBtn').click();
   await expect(page.locator('#fileList')).toContainText('sample.customdata');
 });
+
+
+test('documents and arbitrary file formats can be explicitly imported into the file vault', async ({ page }) => {
+  await page.locator('#fileVaultBtn').click();
+  await expect(page.locator('#fileAddFiles')).toBeVisible();
+  await page.locator('#fileAddFiles').click();
+  await page.locator('#fileInput').setInputFiles([
+    { name: 'report.docx', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', buffer: Buffer.from([80, 75, 3, 4, 1, 2]) },
+    { name: 'source.php', mimeType: 'application/x-httpd-php', buffer: Buffer.from('<?php echo "Hello";') },
+    { name: 'custom.data', mimeType: 'application/octet-stream', buffer: Buffer.from([0, 1, 2, 255]) }
+  ]);
+  await expect(page.locator('#fileList')).toContainText('report.docx');
+  await expect(page.locator('#fileList')).toContainText('source.php');
+  await expect(page.locator('#fileList')).toContainText('custom.data');
+});
+
+test('source-code files can be imported directly into the code library', async ({ page }) => {
+  await page.locator('#codeLibraryBtn').click();
+  await page.locator('#codeImportSource').click();
+  await page.locator('#codeSourceFiles').setInputFiles({
+    name: 'hello.py',
+    mimeType: 'text/x-python',
+    buffer: Buffer.from('print("Hello from Python")\\n')
+  });
+  await expect(page.locator('#codeList')).toContainText('hello.py');
+  await expect(page.locator('#snippetLanguage')).toHaveValue('Python');
+  await expect(page.locator('#snippetSource')).toContainText('Hello from Python');
+  await page.reload();
+  await page.locator('#codeLibraryBtn').click();
+  await expect(page.locator('#codeList')).toContainText('hello.py');
+});
