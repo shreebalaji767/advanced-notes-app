@@ -135,4 +135,68 @@ if(unlocked&&!Array.isArray(data.tasks)){data.tasks=[];save();}
 })();
 </script>
 
+
+<script>
+(()=>{'use strict';
+data.savedSearches=Array.isArray(data.savedSearches)?data.savedSearches:[];
+const searchInput=$('#search'),savedHost=document.createElement('div');
+savedHost.id='savedSearches';
+$('#tags').insertAdjacentHTML('afterend','<div class="heading">Saved searches</div>');
+$('#tags').after(savedHost);
+$('#sort').insertAdjacentHTML('afterend','<button id="saveSearch" class="tool" style="margin:5px 0;width:100%">＋ Save this search</button>');
+$('#daily').insertAdjacentHTML('afterend','<button id="quickCapture">Quick capture</button><button id="statsBtn">Statistics</button>');
+function renderSavedSearches(){
+ savedHost.innerHTML=data.savedSearches.map((s,i)=>'<div style="display:flex;gap:3px;align-items:center"><button data-saved-search="'+i+'" style="flex:1;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border:0;background:transparent;padding:6px">⌕ '+escape(s.name)+'</button><button data-remove-search="'+i+'" title="Remove saved search" style="border:0;background:transparent;padding:5px">×</button></div>').join('')||'<small class="muted">No saved searches</small>';
+}
+const baseRenderNav=renderNav;
+renderNav=function(){baseRenderNav();renderSavedSearches()};
+$('#saveSearch').onclick=async()=>{
+ const q=searchInput.value.trim();
+ if(!q)return toast('Enter a search term first');
+ const name=prompt('Name this saved search',q);
+ if(!name||!name.trim())return;
+ const existing=data.savedSearches.findIndex(s=>s.query.toLowerCase()===q.toLowerCase());
+ const entry={name:name.trim().slice(0,60),query:q};
+ if(existing>=0)data.savedSearches[existing]=entry;else data.savedSearches.push(entry);
+ data.savedSearches=data.savedSearches.slice(-30);
+ await save();renderSavedSearches();toast('Search saved');
+};
+savedHost.addEventListener('click',async e=>{
+ const b=e.target.closest('[data-saved-search]'),r=e.target.closest('[data-remove-search]');
+ if(r){data.savedSearches.splice(+r.dataset.removeSearch,1);await save();renderSavedSearches();return}
+ if(b){searchInput.value=data.savedSearches[+b.dataset.savedSearch]?.query||'';render();searchInput.focus()}
+});
+function quickCapture(){
+ $('#modal').innerHTML='<div class="modal"><form class="card" id="quickForm"><h2>Quick capture</h2><p class="muted">Capture an idea without leaving your current note.</p><label for="quickTitle">Title</label><input id="quickTitle" maxlength="180" placeholder="A thought to remember"><label for="quickBody">Note</label><textarea id="quickBody" rows="5" placeholder="Write a quick thought…" style="width:100%;padding:9px;border:1px solid var(--line);margin:8px 0"></textarea><div style="display:flex;justify-content:flex-end;gap:8px"><button type="button" id="quickCancel">Cancel</button><button class="primary">Save capture</button></div></form></div>';
+ $('#quickCancel').onclick=()=>$('#modal').innerHTML='';
+ $('#quickForm').onsubmit=async e=>{
+  e.preventDefault();await saveNote();
+  const title=$('#quickTitle').value.trim()||'Quick capture — '+new Date().toLocaleString();
+  const content=sanitizeHtml('<p>'+escape($('#quickBody').value).replace(/\n/g,'<br>')+'</p>');
+  const n={id:uid(),title,content,markdown:'',markdownMode:false,folder:folderView||'',tags:['quick-capture'],favorite:false,archived:false,deleted:false,created:date(),updated:date(),history:[]};
+  data.notes.unshift(n);id=n.id;view='all';folderView='';tagView='';
+  await save();$('#modal').innerHTML='';render();$('#title').focus();toast('Quick capture saved');
+ };
+ $('#quickTitle').focus();
+}
+$('#quickCapture').onclick=quickCapture;
+function showStats(){
+ const active=data.notes.filter(n=>!n.deleted&&!n.archived),words=active.reduce((sum,n)=>sum+text(n).trim().split(/\s+/).filter(Boolean).length,0);
+ const tags=new Set(active.flatMap(n=>n.tags||[]));
+ const done=(data.tasks||[]).filter(t=>t.done).length,total=(data.tasks||[]).length;
+ const oldest=active.reduce((v,n)=>!v||n.created<v?n.created:v,'');
+ const newest=active.reduce((v,n)=>!v||n.updated>v?n.updated:v,'');
+ $('#modal').innerHTML='<div class="modal"><div class="card" style="width:min(620px,100%)"><h2>Workspace statistics</h2><p class="muted">Calculated locally from this browser. No data is uploaded.</p><div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px">'+[
+ ['Active notes',active.length],['Archived',data.notes.filter(n=>n.archived&&!n.deleted).length],['In recycle bin',data.notes.filter(n=>n.deleted).length],['Total words',words.toLocaleString()],['Folders',data.folders.length],['Unique tags',tags.size],['Tasks completed',done+' / '+total],['Saved searches',data.savedSearches.length]
+ ].map(x=>'<div style="padding:12px;background:#edf2f6;border:1px solid var(--line);border-radius:5px"><small class="muted">'+x[0]+'</small><div style="font-size:22px;font-weight:700">'+x[1]+'</div></div>').join('')+'</div><p class="muted">Oldest note: '+(oldest?new Date(oldest).toLocaleDateString():'—')+' · Latest activity: '+(newest?new Date(newest).toLocaleDateString():'—')+'</p><p style="text-align:right"><button id="statsClose">Close</button></p></div></div>';
+ $('#statsClose').onclick=()=>$('#modal').innerHTML='';
+}
+$('#statsBtn').onclick=showStats;
+document.addEventListener('keydown',e=>{
+ if((e.ctrlKey||e.metaKey)&&e.altKey&&e.key.toLowerCase()==='n'){e.preventDefault();quickCapture()}
+});
+renderSavedSearches();
+})();
+</script>
+
 </body></html>
