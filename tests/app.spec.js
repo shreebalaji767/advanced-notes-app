@@ -226,6 +226,26 @@ test('source-code files can be imported directly into the code library', async (
 });
 
 
+
+test('advanced search combines tag, title and content filters', async ({ page }) => {
+  await page.locator('#new').click();
+  await page.locator('#title').fill('Alpha planning');
+  await page.locator('#noteTags').fill('urgent, work');
+  await page.locator('#rich').fill('Review the launch checklist');
+  await page.waitForTimeout(700);
+  await page.locator('#new').click();
+  await page.locator('#title').fill('Beta notes');
+  await page.locator('#noteTags').fill('work');
+  await page.locator('#rich').fill('General project notes');
+  await page.waitForTimeout(700);
+  await page.locator('#search').fill('tag:urgent title:Alpha content:launch');
+  await expect(page.locator('.note')).toHaveCount(1);
+  await expect(page.locator('.note').first()).toContainText('Alpha planning');
+  await page.locator('#search').fill('tag:missing');
+  await expect(page.locator('.note')).toHaveCount(0);
+  await expect(page.locator('#advancedSearchEmpty')).toContainText('No notes match');
+});
+
 test('Markdown editor supports split preview, headings outline and richer blocks', async ({ page }) => {
   await page.locator('#new').click();
   await page.locator('#title').fill('Markdown workspace');
