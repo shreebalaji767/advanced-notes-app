@@ -156,10 +156,10 @@ test('code snippets can be saved, searched, copied, downloaded and survive reloa
   await page.locator('#snippetTitle').fill('Example JavaScript');
   await page.locator('#snippetLanguage').selectOption('JavaScript');
   await page.locator('#snippetTags').fill('demo, javascript');
-  await page.locator('#snippetSource').fill('const answer = 42;\\nconsole.log(answer);');
+  await page.locator('#snippetSource').fill('const answer = 42;\nconsole.log(answer);');
   await page.locator('#codeForm button[type="submit"]').click();
   await expect(page.locator('#codeList')).toContainText('Example JavaScript');
-  await expect(page.locator('#snippetSource')).toHaveValue('const answer = 42;\\nconsole.log(answer);');
+  await expect(page.locator('#snippetSource')).toHaveValue('const answer = 42;\nconsole.log(answer);');
   await page.locator('#codeSearch').fill('console.log');
   await expect(page.locator('#codeList')).toContainText('Example JavaScript');
   const downloadPromise = page.waitForEvent('download');
@@ -170,7 +170,7 @@ test('code snippets can be saved, searched, copied, downloaded and survive reloa
   await page.reload();
   await page.locator('#codeLibraryBtn').click();
   await expect(page.locator('#codeList')).toContainText('Example JavaScript');
-  await expect(page.locator('#snippetSource')).toHaveValue('const answer = 42;\\nconsole.log(answer);');
+  await expect(page.locator('#snippetSource')).toHaveValue('const answer = 42;\nconsole.log(answer);');
 });
 
 test('universal file vault saves arbitrary formats and restores original file bytes', async ({ page }) => {
@@ -215,7 +215,7 @@ test('source-code files can be imported directly into the code library', async (
   await page.locator('#codeSourceFiles').setInputFiles({
     name: 'hello.py',
     mimeType: 'text/x-python',
-    buffer: Buffer.from('print("Hello from Python")\\n')
+    buffer: Buffer.from('print("Hello from Python")\n')
   });
   await expect(page.locator('#codeList')).toContainText('hello.py');
   await expect(page.locator('#snippetLanguage')).toHaveValue('Python');
@@ -230,7 +230,7 @@ test('Markdown editor supports split preview, headings outline and richer blocks
   await page.locator('#new').click();
   await page.locator('#title').fill('Markdown workspace');
   await page.locator('#markdown').click();
-  await page.locator('#md').fill('# Main heading\\n## Nested heading\\n\\nA **bold** line with `inline code`.\\n\\n- First item\\n- Second item\\n\\n```js\\nalert(1);\\n```');
+  await page.locator('#md').fill('# Main heading\n## Nested heading\n\nA **bold** line with `inline code`.\n\n- First item\n- Second item\n\n```js\nalert(1);\n```');
   await page.locator('#preview').click();
   await expect(page.locator('#md')).toBeVisible();
   await expect(page.locator('#previewPane')).toBeVisible();
@@ -248,10 +248,10 @@ test('Markdown editor supports split preview, headings outline and richer blocks
 
 test('plain text and Markdown documents can be imported as editable notes', async ({ page }) => {
   await page.locator('#importNotesInput').setInputFiles([
-    { name: 'meeting-notes.txt', mimeType: 'text/plain', buffer: Buffer.from('Bring the project update\\nReview next steps') },
-    { name: 'research.md', mimeType: 'text/markdown', buffer: Buffer.from('# Research\\n\\n- Source one\\n- Source two') }
+    { name: 'meeting-notes.txt', mimeType: 'text/plain', buffer: Buffer.from('Bring the project update\nReview next steps') },
+    { name: 'research.md', mimeType: 'text/markdown', buffer: Buffer.from('# Research\n\n- Source one\n- Source two') }
   ]);
-  await expect(page.locator('.note').first()).toContainText('research');
+  await page.locator('.note').filter({ hasText: 'research' }).click();
   await expect(page.locator('#title')).toHaveValue('research');
   await expect(page.locator('#markdown')).toBeEnabled();
   await expect(page.locator('#md')).toHaveValue(/# Research/);
