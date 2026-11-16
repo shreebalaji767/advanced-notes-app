@@ -19,6 +19,9 @@ A free, static, offline-capable notes workspace built with vanilla HTML, CSS and
 - Backup and restore with validation for encrypted and unencrypted backups
 - Weekly backup reminder, Markdown export and standalone HTML export
 - Version-history browser with side-by-side text comparison, restore and export
+- Reusable meeting, project, study, journal and decision templates
+- Related-note links with automatically generated backlinks
+- Distraction-free focus mode with keyboard shortcut (Ctrl/Cmd+Alt+F)
 - Installable PWA with scalable 192px and 512px SVG icons and an offline app shell
 - Automated Chromium desktop and mobile regression tests in GitHub Actions; deployment waits for tests to pass
 - Keyboard shortcuts: Ctrl/Cmd+S to save, Ctrl/Cmd+K to search, Ctrl/Cmd+Shift+N for a daily note
