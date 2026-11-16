@@ -275,7 +275,7 @@ renderSavedSearches();
   const links=Array.isArray(n.relatedNotes)?n.relatedNotes:[];
   const targets=links.map(x=>data.notes.find(y=>y.id===x&&!y.deleted)).filter(Boolean);
   const backlinks=data.notes.filter(x=>!x.deleted&&x.id!==n.id&&(x.relatedNotes||[]).includes(n.id));
-  const all=[...targets.map(x=>({n:x,label:'Linked: '})),...backlinks.map(x=>({n:x,label:'Backlink: '}))];
+  const all=[],seen=new Set();targets.forEach(x=>{if(!seen.has(x.id)){seen.add(x.id);all.push({n:x,label:'Linked: '})}});backlinks.forEach(x=>{if(!seen.has(x.id)){seen.add(x.id);all.push({n:x,label:'Backlink: '})}});
   host.classList.remove('hidden');
   host.innerHTML='<b>Related notes</b> '+(all.length?all.map(x=>'<button data-open-related="'+escape(x.n.id)+'">'+x.label+escape(x.n.title||'Untitled')+'</button>').join(''):'<span class="muted">No links yet</span>');
  }
