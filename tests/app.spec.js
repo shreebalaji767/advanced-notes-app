@@ -224,3 +224,38 @@ test('source-code files can be imported directly into the code library', async (
   await page.locator('#codeLibraryBtn').click();
   await expect(page.locator('#codeList')).toContainText('hello.py');
 });
+
+
+test('Markdown editor supports split preview, headings outline and richer blocks', async ({ page }) => {
+  await page.locator('#new').click();
+  await page.locator('#title').fill('Markdown workspace');
+  await page.locator('#markdown').click();
+  await page.locator('#md').fill('# Main heading\\n## Nested heading\\n\\nA **bold** line with `inline code`.\\n\\n- First item\\n- Second item\\n\\n```js\\nalert(1);\\n```');
+  await page.locator('#preview').click();
+  await expect(page.locator('#md')).toBeVisible();
+  await expect(page.locator('#previewPane')).toBeVisible();
+  await expect(page.locator('#previewPane')).toContainText('Main heading');
+  await expect(page.locator('#previewPane strong')).toContainText('bold');
+  await expect(page.locator('#previewPane ul li')).toHaveCount(2);
+  await expect(page.locator('#previewPane pre code')).toContainText('alert(1)');
+  await page.locator('#outlineBtn').click();
+  await expect(page.locator('#outlineItems')).toContainText('Main heading');
+  await expect(page.locator('#outlineItems')).toContainText('Nested heading');
+  await page.locator('#outlineItems [data-outline-index="1"]').click();
+  await expect(page.locator('#md')).toBeFocused();
+  await expect(page.locator('#md')).toHaveValue(/Nested heading/);
+});
+
+test('plain text and Markdown documents can be imported as editable notes', async ({ page }) => {
+  await page.locator('#importNotesInput').setInputFiles([
+    { name: 'meeting-notes.txt', mimeType: 'text/plain', buffer: Buffer.from('Bring the project update\\nReview next steps') },
+    { name: 'research.md', mimeType: 'text/markdown', buffer: Buffer.from('# Research\\n\\n- Source one\\n- Source two') }
+  ]);
+  await expect(page.locator('.note').first()).toContainText('research');
+  await expect(page.locator('#title')).toHaveValue('research');
+  await expect(page.locator('#markdown')).toBeEnabled();
+  await expect(page.locator('#md')).toHaveValue(/# Research/);
+  await page.reload();
+  await expect(page.locator('.note')).toContainText('meeting-notes');
+  await expect(page.locator('.note')).toContainText('research');
+});
