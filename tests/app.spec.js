@@ -136,7 +136,7 @@ test('related notes can be linked and opened from backlinks', async ({ page }) =
   await page.locator('[data-link-choice]').check();
   await page.locator('#relatedClose').click();
   await expect(page.locator('#relatedNotes')).toContainText('First note');
-  await page.locator('[data-open-related]').click();
+  await page.locator('[data-open-related]').first().click();
   await expect(page.locator('#title')).toHaveValue('First note');
   await expect(page.locator('#relatedNotes')).toContainText('Second note');
 });
