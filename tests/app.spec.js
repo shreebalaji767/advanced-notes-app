@@ -148,3 +148,26 @@ test('focus mode hides navigation panes and can be exited', async ({ page }) => 
   await expect(page.locator('body')).not.toHaveClass(/focus-mode/);
   await expect(page.locator('.nav')).toBeVisible();
 });
+
+test('code snippets can be saved, searched, copied, downloaded and survive reload', async ({ page }) => {
+  await page.locator('#codeLibraryBtn').click();
+  await page.locator('#codeNew').click();
+  await page.locator('#snippetTitle').fill('Example JavaScript');
+  await page.locator('#snippetLanguage').selectOption('JavaScript');
+  await page.locator('#snippetTags').fill('demo, javascript');
+  await page.locator('#snippetSource').fill('const answer = 42;\\nconsole.log(answer);');
+  await page.locator('#codeForm button[type="submit"]').click();
+  await expect(page.locator('#codeList')).toContainText('Example JavaScript');
+  await expect(page.locator('#snippetSource')).toHaveValue('const answer = 42;\\nconsole.log(answer);');
+  await page.locator('#codeSearch').fill('console.log');
+  await expect(page.locator('#codeList')).toContainText('Example JavaScript');
+  const downloadPromise = page.waitForEvent('download');
+  await page.locator('#snippetDownload').click();
+  const file = await downloadPromise;
+  expect(file.suggestedFilename()).toBe('Example-JavaScript.js');
+  await page.locator('#codeClose').click();
+  await page.reload();
+  await page.locator('#codeLibraryBtn').click();
+  await expect(page.locator('#codeList')).toContainText('Example JavaScript');
+  await expect(page.locator('#snippetSource')).toContainText('const answer = 42;');
+});
