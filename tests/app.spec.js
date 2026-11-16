@@ -91,3 +91,16 @@ test('workspace statistics open and show local totals', async ({ page }) => {
   await expect(page.locator('#modal')).toContainText('Active notes');
   await page.locator('#statsClose').click();
 });
+
+test('header logo, favicon, and PWA icons use the same transparent artwork', async ({ page }) => {
+  const iconPath = './icons/icon-512.svg';
+  await expect(page.locator('.app-brand img')).toHaveAttribute('src', iconPath);
+  await expect(page.locator('link[rel="icon"]')).toHaveAttribute('href', iconPath);
+  const manifest = await (await page.request.get(new URL('./manifest.json', page.url()).toString())).json();
+  const iconResponses = await Promise.all(manifest.icons.map(icon =>
+    page.request.get(new URL(icon.src, page.url()).toString())
+  ));
+  const artwork = await Promise.all(iconResponses.map(response => response.text()));
+  expect(artwork[0]).toBe(artwork[1]);
+  expect(artwork[0]).not.toMatch(/<rect\\b/i);
+});
