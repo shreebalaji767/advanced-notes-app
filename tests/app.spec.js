@@ -256,6 +256,6 @@ test('plain text and Markdown documents can be imported as editable notes', asyn
   await expect(page.locator('#markdown')).toBeEnabled();
   await expect(page.locator('#md')).toHaveValue(/# Research/);
   await page.reload();
-  await expect(page.locator('.note')).toContainText('meeting-notes');
-  await expect(page.locator('.note')).toContainText('research');
+  await expect(page.locator('.note').filter({ hasText: 'meeting-notes' })).toHaveCount(1);
+  await expect(page.locator('.note').filter({ hasText: 'research' })).toHaveCount(1);
 });
