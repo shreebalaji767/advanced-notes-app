@@ -66,3 +66,28 @@ test('mobile viewport keeps primary controls reachable', async ({ page }, testIn
   await expect(page.locator('#search')).toBeVisible();
   await expect(page.locator('#title')).toBeVisible();
 });
+
+test('quick capture creates a note without leaving the workspace', async ({ page }) => {
+  await page.locator('#quickCapture').click();
+  await page.locator('#quickTitle').fill('Quick capture test');
+  await page.locator('#quickBody').fill('Captured from the quick capture dialog');
+  await page.locator('#quickForm button[type="submit"]').click();
+  await expect(page.locator('.note').first()).toContainText('Quick capture test');
+});
+
+test('saved searches can be created and reused', async ({ page }) => {
+  await page.locator('#search').fill('meeting');
+  page.once('dialog', dialog => dialog.accept('Meeting notes'));
+  await page.locator('#saveSearch').click();
+  await expect(page.locator('#savedSearches')).toContainText('Meeting notes');
+  await page.locator('#search').fill('');
+  await page.locator('[data-saved-search="0"]').click();
+  await expect(page.locator('#search')).toHaveValue('meeting');
+});
+
+test('workspace statistics open and show local totals', async ({ page }) => {
+  await page.locator('#statsBtn').click();
+  await expect(page.locator('#modal')).toContainText('Workspace statistics');
+  await expect(page.locator('#modal')).toContainText('Active notes');
+  await page.locator('#statsClose').click();
+});
