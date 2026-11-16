@@ -21,11 +21,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
       - name: Prepare static site
-        run: |
-          rm -rf site extracted
-          mkdir site
-          unzip -q advanced-notes-app.zip -d extracted
-          cp -R extracted/advanced-notes-app/. site/
+        run: mkdir site && cp index.html manifest.json sw.js site/
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
