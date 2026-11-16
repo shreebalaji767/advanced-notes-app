@@ -85,6 +85,7 @@ const openModal=html=>{modal.innerHTML='<div class="modal"><div class="card" sty
 const closeModal=()=>{modal.innerHTML=''};
 const esc=escape;
 function taskDialog(){
+ data.tasks=Array.isArray(data.tasks)?data.tasks:[];
  const rows=data.tasks.map((t,i)=>'<div style="display:flex;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)"><input type="checkbox" data-taskdone="'+i+'" '+(t.done?'checked':'')+'><span style="flex:1;'+(t.done?'text-decoration:line-through;opacity:.6':'')+'">'+esc(t.text)+'</span><small>'+esc(t.due||'No due date')+'</small><button data-taskedit="'+i+'">Edit</button><button data-taskdel="'+i+'">×</button></div>').join('');
  openModal('<h2>Task manager</h2><p class="muted">Track standalone tasks locally. Tasks are included in workspace backups.</p><form id="taskForm" style="display:flex;gap:6px;flex-wrap:wrap"><input id="taskText" placeholder="Add a task…" required style="flex:1;min-width:180px;padding:9px;border:1px solid var(--line)"><input id="taskDue" type="date" style="padding:8px;border:1px solid var(--line)"><button class="primary">Add task</button></form><div style="margin-top:12px">'+(rows||'<p class="empty">No tasks yet. Add one above.</p>')+'</div><p style="text-align:right"><button id="taskClose">Close</button></p>');
  $('#taskForm').onsubmit=async e=>{e.preventDefault();data.tasks.push({id:uid(),text:$('#taskText').value.trim(),due:$('#taskDue').value,done:false,created:date()});await save();taskDialog()};
