@@ -169,5 +169,5 @@ test('code snippets can be saved, searched, copied, downloaded and survive reloa
   await page.reload();
   await page.locator('#codeLibraryBtn').click();
   await expect(page.locator('#codeList')).toContainText('Example JavaScript');
-  await expect(page.locator('#snippetSource')).toContainText('const answer = 42;');
+  await expect(page.locator('#snippetSource')).toHaveValue('const answer = 42;\\nconsole.log(answer);');
 });
