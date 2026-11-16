@@ -7,7 +7,7 @@ module.exports = defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: 'list',
   use: {
-    baseURL: 'http://127.0.0.1:4173',
+    baseURL: process.env.BASE_URL || 'http://127.0.0.1:4173',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure'
   },
@@ -15,10 +15,10 @@ module.exports = defineConfig({
     { name: 'chromium-desktop', use: { ...devices['Desktop Chrome'] } },
     { name: 'chromium-mobile', use: { ...devices['Pixel 7'] } }
   ],
-  webServer: {
+  ...(process.env.BASE_URL ? {} : { webServer: {
     command: 'python3 -m http.server 4173',
     url: 'http://127.0.0.1:4173',
     reuseExistingServer: !process.env.CI,
     timeout: 15000
-  }
+  } })
 });
