@@ -167,7 +167,7 @@ savedHost.addEventListener('click',async e=>{
  if(b){searchInput.value=data.savedSearches[+b.dataset.savedSearch]?.query||'';render();searchInput.focus()}
 });
 function quickCapture(){
- $('#modal').innerHTML='<div class="modal"><form class="card" id="quickForm"><h2>Quick capture</h2><p class="muted">Capture an idea without leaving your current note.</p><label for="quickTitle">Title</label><input id="quickTitle" maxlength="180" placeholder="A thought to remember"><label for="quickBody">Note</label><textarea id="quickBody" rows="5" placeholder="Write a quick thought…" style="width:100%;padding:9px;border:1px solid var(--line);margin:8px 0"></textarea><div style="display:flex;justify-content:flex-end;gap:8px"><button type="button" id="quickCancel">Cancel</button><button class="primary">Save capture</button></div></form></div>';
+ $('#modal').innerHTML='<div class="modal"><form class="card" id="quickForm"><h2>Quick capture</h2><p class="muted">Capture an idea without leaving your current note.</p><label for="quickTitle">Title</label><input id="quickTitle" maxlength="180" placeholder="A thought to remember"><label for="quickBody">Note</label><textarea id="quickBody" rows="5" placeholder="Write a quick thought…" style="width:100%;padding:9px;border:1px solid var(--line);margin:8px 0"></textarea><div style="display:flex;justify-content:flex-end;gap:8px"><button type="button" id="quickCancel">Cancel</button><button type="submit" class="primary">Save capture</button></div></form></div>';
  $('#quickCancel').onclick=()=>$('#modal').innerHTML='';
  $('#quickForm').onsubmit=async e=>{
   e.preventDefault();await saveNote();
