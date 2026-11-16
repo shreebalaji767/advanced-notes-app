@@ -239,10 +239,10 @@ test('advanced search combines tag, title and content filters', async ({ page })
   await page.locator('#rich').fill('General project notes');
   await page.waitForTimeout(700);
   await page.locator('#search').fill('tag:urgent title:Alpha content:launch');
-  await expect(page.locator('.note')).toHaveCount(1);
+  await expect(page.locator('.note:visible')).toHaveCount(1);
   await expect(page.locator('.note').first()).toContainText('Alpha planning');
   await page.locator('#search').fill('tag:missing');
-  await expect(page.locator('.note')).toHaveCount(0);
+  await expect(page.locator('.note:visible')).toHaveCount(0);
   await expect(page.locator('#advancedSearchEmpty')).toContainText('No notes match');
 });
 
