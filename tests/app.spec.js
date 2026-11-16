@@ -60,8 +60,8 @@ test('PWA manifest declares both app icon sizes', async ({ page }) => {
   }
 });
 
-test('mobile viewport keeps primary controls reachable', async ({ page, isMobile }) => {
-  if (!isMobile) test.skip();
+test('mobile viewport keeps primary controls reachable', async ({ page }, testInfo) => {
+  if (!testInfo.project.name.includes('mobile')) test.skip();
   await expect(page.locator('#new')).toBeVisible();
   await expect(page.locator('#search')).toBeVisible();
   await expect(page.locator('#title')).toBeVisible();
